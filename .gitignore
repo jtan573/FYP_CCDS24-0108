@@ -2,3 +2,4 @@
 .env
 /data
 run.sh
+/testing_notebooks
