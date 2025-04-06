@@ -2,4 +2,4 @@
 .env
 /data
 run.sh
-/testing_notebooks
+testing_notebooks/helloworld.ipynb
