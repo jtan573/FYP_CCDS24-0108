@@ -1,5 +1,8 @@
 .venv
 .env
-/data
+/data/nhanes_data
+/data/snomedct_international
+/data/results
+/data/chroma_original_data
 run.sh
 testing_notebooks/helloworld.ipynb

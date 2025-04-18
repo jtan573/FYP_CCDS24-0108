@@ -8,7 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 def get_text2cypher_llm(): 
     # Load environment variables for authentication
     load_dotenv()
-    HF_TOKEN = os.getenv("HF_TOKEN_2")
+    HF_TOKEN = os.getenv("HF_TOKEN")
     if not HF_TOKEN:
         raise ValueError("HF_TOKEN not found in environment variables. Please check your .env file.")
     login(token=HF_TOKEN)

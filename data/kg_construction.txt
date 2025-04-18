@@ -1,0 +1,171 @@
+
+CREATE CONSTRAINT personIdConstraint FOR (patient:Patient) REQUIRE patient.pid IS UNIQUE
+
+# ----------------- LOAD DEMOGRAPHICS DATA -----------------
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_demographics.csv" AS csv
+CREATE (p:Patient {pid: csv.SEQN, age: csv.Age_at_screening, gender: csv.Gender})
+RETURN p
+LIMIT 20
+
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_demographics.csv" AS csv
+MATCH (p:Patient {pid:csv.SEQN})
+MATCH (n:ObjectConcept {sctid:csv.Age_ID})
+CREATE (p)-[:IN_AGE_GROUP]->(n)
+RETURN p, n
+LIMIT 20
+
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_demographics.csv" AS csv
+MATCH (p:Patient {pid:csv.SEQN})
+MATCH (n:ObjectConcept {sctid:csv.Gender_ID})
+CREATE (p)-[:HAS_GENDER]->(n)
+RETURN p, n
+LIMIT 20
+
+# ----------------- LOAD PHYSICAL ACTIVITY DATA -----------------
+LOAD CSV WITH HEADERS FROM '../data/nhanes_data/filtered/nhanes_physicalactivity.csv' AS row
+MATCH (p:Patient {pid: row.SEQN})
+SET p.minutes_sedentary_daily = row.min_sedentary_daily,
+    p.minutes_moderate_weekly = row.minutes_mod_weekly,
+    p.freq_moderate_weekly = row.freq_mod_weekly,
+    p.minutes_vigorous_weekly = row.minutes_vig_weekly,
+    p.freq_vigorous_weekly = row.freq_vig_weekly
+
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_physicalactivity.csv" AS csv
+MATCH (p:Patient {pid:csv.SEQN})
+MATCH (n:ObjectConcept {sctid:csv.Sedentary_Behavior_SNOMED})
+CREATE (p)-[:HAS_LIFESTYLE]->(n)
+RETURN p, n
+LIMIT 20
+
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_physicalactivity.csv" AS csv
+MATCH (p:Patient {pid:csv.SEQN})
+MATCH (n:ObjectConcept {sctid:csv.Exercise_Level_SNOMED	})
+CREATE (p)-[:HAS_EXERCISE_ACTIVITY]->(n)
+RETURN p, n
+LIMIT 20
+
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_physicalactivity.csv" AS csv
+MATCH (p:Patient {pid:csv.SEQN})
+MATCH (n:ObjectConcept {sctid:csv.Exercise_Freq_SNOMED	})
+CREATE (p)-[:HAS_EXERCISE_ACTIVITY]->(n)
+RETURN p, n
+LIMIT 20
+
+# ----------------- LOAD PHYSICAL YOUTH DATA -----------------
+LOAD CSV WITH HEADERS FROM '../data/nhanes_data/filtered/nhanes_physicalactivity_youth.csv' AS row
+MATCH (p:Patient {pid: row.SEQN})
+SET p.minutes_sedentary_daily = row.min_sedentary,
+    p.minutes_active_weekly = row.youth_act_weekly,
+    p.freq_active_weekly = row.days_active
+
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_physicalactivity_youth.csv" AS csv
+MATCH (p:Patient {pid:csv.SEQN})
+MATCH (n:ObjectConcept {sctid:csv.Sedentary_Youth_SNOMED})
+CREATE (p)-[:HAS_LIFESTYLE]->(n)
+RETURN p, n
+LIMIT 20
+
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_physicalactivity_youth.csv" AS csv
+MATCH (p:Patient {pid:csv.SEQN})
+MATCH (n:ObjectConcept {sctid:csv.Exercise_Level_SNOMED	})
+CREATE (p)-[:HAS_EXERCISE_ACTIVITY]->(n)
+RETURN p, n
+LIMIT 20
+
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_physicalactivity_youth.csv" AS csv
+MATCH (p:Patient {pid:csv.SEQN})
+MATCH (n:ObjectConcept {sctid:csv.Exercise_Freq_SNOMED})
+CREATE (p)-[:HAS_EXERCISE_ACTIVITY]->(n)
+RETURN p, n
+LIMIT 20
+
+# ----------------- LOAD MEDICAL CONDITIONS DATA -----------------
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_medconditions.csv" AS row
+MATCH (p:Patient {pid: row.SEQN})  // Match the patient node
+WITH p, split(row.all_diagnosis, ",") AS codes  // Split the list of codes
+UNWIND codes AS code  // Unwind the list into individual values
+MATCH (m:ObjectConcept {sctid: code})  // Find the existing node in the KG
+MERGE (p)-[:HAS_DISORDER]->(m)  
+RETURN p, m
+LIMIT 20
+
+# ----------------- LOAD ALCOHOL USE DATA -----------------
+LOAD CSV WITH HEADERS FROM "../data/nhanes_data/filtered/nhanes_alcoholuse.csv" AS csv
+MATCH (p:Patient {pid:csv.SEQN})
+MATCH (n:ObjectConcept {sctid:csv.Alcohol_Consumption_SNOMED})
+CREATE (p)-[:ALCOHOL_USE]->(n)
+RETURN p, n
+LIMIT 20
+
+## ----------------- Add node labels ----------------- 
+https://medium.com/@john.newberry27/populating-a-snomed-ct-property-graph-with-synthetic-patient-data-a43a3a044649
+
+MATCH (n:ObjectConcept) WHERE n.FSN ENDS WITH '(religion/philosophy)'
+SET n:ReligionPhilo
+RETURN n LIMIT 10
+
+MATCH (n:ObjectConcept) WHERE n.FSN ENDS WITH '(tumor staging)'
+SET n:TumorStaging
+RETURN n LIMIT 10
+
+MATCH (n:ObjectConcept) WHERE n.FSN ENDS WITH '(navigational concept)'
+SET n:NavigationalConcept
+RETURN n LIMIT 10
+
+MATCH (n:ObjectConcept) WHERE n.FSN ENDS WITH '(clinical drug)'
+SET n:ClinicalDrug
+RETURN n LIMIT 10
+
+MATCH (n:ObjectConcept) WHERE n.FSN ENDS WITH '(medicinal product form)'
+SET n:MedicinalProduct
+RETURN n LIMIT 10
+
+MATCH (n:ObjectConcept) WHERE n.FSN ENDS WITH '(basic dose form)'
+SET n:BasicDoseForm
+RETURN n LIMIT 10
+
+MATCH (n:ObjectConcept) WHERE n.FSN ENDS WITH '(attribute)'
+SET n:Attribute
+RETURN n LIMIT 10
+
+MATCH (n:ObjectConcept) WHERE n.FSN ENDS WITH '(namespace concept)'
+SET n:NamespaceConcept
+RETURN n LIMIT 10
+
+MATCH (n:ObjectConcept) WHERE n.FSN ENDS WITH '(racial group)'
+SET n:RacialGroup
+RETURN n LIMIT 10
+
+MATCH (n:ObjectConcept) WHERE n.FSN ENDS WITH '(environment / location)'
+SET n:Environment
+RETURN n LIMIT 10
+
+## ----------------- Remove labels from nodes with multiple labels ----------------- 
+MATCH (n)
+WHERE size(labels(n)) >= 2 AND 'ObjectConcept' IN labels(n)
+REMOVE n:ObjectConcept
+
+## ----------------- Remove all inactive nodes and rs ----------------- 
+MATCH (n) WHERE n.active = "0" DETACH DELETE n
+MATCH ()-[r]->() WHERE r.active = "0" DELETE r
+
+## ----------------- Remove all the extra fields -----------------
+MATCH (n) REMOVE n.active, n.history
+MATCH ()-[r]->() REMOVE r.history, r.active
+
+## ----------------- Remove all irrelevant nodes and rs ----------------- 
+MATCH (n:Occupation) DETACH DELETE n
+MATCH (n:SpecialConcept) DETACH DELETE n
+MATCH (n:RacialGroup) DETACH DELETE n
+
+## ----------------- Lowercase ----------------- 
+MATCH (n) SET n.FSN = toLower(n.FSN) RETURN n.FSN
+
+## ----------------- Creating CSV of synonyms ----------------- 
+CALL apoc.export.csv.query(
+    "MATCH (c)-[:HAS_DESCRIPTION]->(d:Description)
+    WHERE toLower(d.descriptionType) CONTAINS 'synonym' OR toLower(d.descriptionType) CONTAINS 'preferred'
+    RETURN c.sctid AS sctid, labels(c)[0] as nodeType, c.FSN AS canonicalName, d.term AS synonymTerm", 
+  "file:C:/Users/jaslyn/Documents/NTU/BCG/FYP/LangChain/data/snomed_check.csv", 
+  {stream:false}
+)

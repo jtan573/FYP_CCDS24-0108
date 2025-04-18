@@ -1,0 +1,50 @@
+NODE TYPES:
+All nodes below contain only these properties: sctid: STRING, FSN: STRING (FSN: Fully Specified Name), nodetype: STRING
+- ObjectConcept, Description, RoleGroup, QualifierValue, Disorder, Finding, Procedure, RegimeorTherapy, Situation, ObservableEntity, MorphologicAbnormality
+- BodyStructure, CellStructure, Cell, Event, PhysicalObject, PhysicalForce, Substance, Product, MedicinalProduct, ClinicalDrug
+- DoseForm, BasicDoseForm, AssessmentScale, StagingScale, TumorStaging, Environment, Organism, Attribute, NamespaceConcept, NavigationalConcept, ContextualConcept, Person, Specimen
+
+Special node:
+- Patient(pid, gender, age, minutes_sedentary_daily, minutes_moderate_weekly, freq_moderate_weekly,
+          minutes_vigorous_weekly, freq_vigorous_weekly, minutes_active_weekly, freq_active_weekly)
+
+RELATIONSHIPS:
+General:
+- (:Concept)-[:HAS_DESCRIPTION]->(:Description)
+
+Role Group (A RoleGroup represents a logical grouping of attribute-value pairs. 
+For example, in "Fracture of femur caused by a fall", the site (femur) and the cause (fall) are grouped to represent a single clinical event.
+How its used: Concepts (e.g., Disorder, Procedure, etc.) are linked to RoleGroup via [:HAS_ROLE_GROUP]):
+- (:Concept)-[:HAS_ROLE_GROUP]->(:RoleGroup)
+- (:RoleGroup)-[:HAS_FOCUS]->(:Disorder|Finding|Procedure|RegimeorTherapy)
+- (:RoleGroup)-[:FINDING_SITE|PROCEDURE_SITE|PROCEDURE_SITE__DIRECT|PROCEDURE_SITE__INDIRECT]->(:BodyStructure|CellStructure)
+- (:RoleGroup)-[:ASSOCIATED_MORPHOLOGY|DIRECT_MORPHOLOGY|INDIRECT_MORPHOLOGY]->(:MorphologicAbnormality)
+- (:RoleGroup)-[:CAUSATIVE_AGENT]->(:Organism|Substance|PhysicalForce)
+- (:RoleGroup)-[:INTERPRETS|FINDING_METHOD]->(:Procedure|ObservableEntity)
+- (:RoleGroup)-[:HAS_ACTIVE_INGREDIENT|USING_SUBSTANCE|COMPONENT|DIRECT_SUBSTANCE]->(:Substance)
+- (:RoleGroup)-[:USING_DEVICE|USING_ACCESS_DEVICE|DIRECT_DEVICE]->(:PhysicalObject)
+- (:RoleGroup)-[:HAS_MANUFACTURED_DOSE_FORM]->(:DoseForm)
+- (:RoleGroup)-[:SURGICAL_APPROACH|ROUTE_OF_ADMINISTRATION|LATERALITY|ACCESS|METHOD]->(:QualifierValue)
+- (:RoleGroup)-[:HAS_SPECIMEN|SPECIMEN_PROCEDURE|SPECIMEN_SUBSTANCE|SPECIMEN_SOURCE_TOPOGRAPHY]->(:Specimen|Procedure|BodyStructure|Substance)
+- (:RoleGroup)-[:DUE_TO|AFTER|DURING]->(:Event|Procedure|Disorder)
+- (:RoleGroup)-[:HAS_INTERPRETATION|CLINICAL_COURSE|FINDING_CONTEXT|PROCEDURE_CONTEXT|TEMPORAL_CONTEXT]->(:QualifierValue)
+- (:RoleGroup)-[:ASSOCIATED_FINDING|ASSOCIATED_PROCEDURE|ASSOCIATED_WITH]->(:Disorder|Procedure|PhysicalObject)
+- (:RoleGroup)-[:HAS_INTENT|PRIORITY|PROPERTY|HAS_REALIZATION|PLAYS_ROLE|HAS_DISPOSITION]->(:QualifierValue|ObjectConcept)
+- (:RoleGroup)-[:HAS_DEVICE_INTENDED_SITE]->(:BodyStructure)
+- (:RoleGroup)-[:IS_MODIFICATION_OF]->(:Substance)
+
+Patient-specific:
+- (:Patient)-[:HAS_DISORDER]->(:Disorder)
+- (:Patient)-[:HAS_LIFESTYLE]->(:Finding)
+- (:Patient)-[:HAS_EXERCISE_ACTIVITY]->(:Finding)
+- (:Patient)-[:ALCOHOL_USE]->(:Finding)
+- (:Patient)-[:HAS_GENDER]->(:Finding)
+- (:Patient)-[:IN_AGE_GROUP]->(:Person)
+
+TAXONOMY ISA LINKS:
+Most concepts are linked hierarchically using ISA:
+- (:Finding)-[:ISA]->(:Disorder)
+- (:Procedure)-[:ISA]->(:RegimeorTherapy)
+- (:ObservableEntity)-[:ISA]->(:Finding)
+- (:Disorder)-[:ISA]->(:Event)
+...and many others
